@@ -8,16 +8,16 @@ const handleCallback = async (req, res) => {
     const response = await axios.post(
         "https://services.leadconnectorhq.com/oauth/token",
         qs.stringify({
-            client_id: process.env.CLIENT_ID,
-            client_secret: process.env.CLIENT_SECRET,
-            grant_type: "authorization_code",
-            code: code,
-            redirect_uri: process.env.REDIRECT_URI
+        client_id: process.env.CLIENT_ID,
+        client_secret: process.env.CLIENT_SECRET,
+        grant_type: "authorization_code",
+        code: code,
+        redirect_uri: process.env.REDIRECT_URI
         }),
         {
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            }
+        headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+        }
         }
     );
 
@@ -33,6 +33,4 @@ const handleCallback = async (req, res) => {
     });
 };
 
-module.exports = {
-    handleCallback
-};
+module.exports = handleCallback;

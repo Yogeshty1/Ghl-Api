@@ -4,6 +4,7 @@ const app = express();
 const codes = require("./routes/codes_routes.js");
 const auth =require("./routes/callback_routes.js")
 const pool = require("./models/tokens_model.js")
+const contact_routes = require("./routes/contact_routes.js");
 
 app.get("/", (req, res) => {
 res.send("Hello World! i am working on this ghl project with MySQL database");
@@ -23,8 +24,12 @@ initDatabase()
     console.error(" Database initialization failed:", err)
 })
 
-app.get("/login", codes);
+//routes
+app.use("/login", codes);
 app.use("/oauth", auth);
+
+
+app.use("/contacts", contact_routes);
 
 
 const PORT = process.env.PORT;
