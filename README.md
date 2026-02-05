@@ -14,20 +14,23 @@ A Node.js application for integrating with GoHighLevel (GHL) API using OAuth 2.0
 
 ```
 ├── controllers/
-│   └── oauthController.js    # OAuth callback logic
+│   ├── contact_controllers.js  # Contact management endpoints
+│   ├── oauthController.js      # OAuth callback handler
+│   ├── refreshToken.js         # Token refresh logic
+│   └── tokenService.js         # Token validation service
 ├── middleware/
-│   └── authMiddleware.js     # Automatic token refresh middleware
+│   └── ghlAuthMiddleware.js     # GHL authentication middleware
 ├── models/
-│   ├── oauthModel.js         # Token database operations
-│   └── tokens_model.js       # Database connection
+│   ├── oauthModel.js           # Token database operations
+│   └── tokens_model.js          # MySQL database connection
 ├── routes/
-│   ├── api_routes.js         # Protected API routes
-│   ├── callback_routes.js    # OAuth callback route
-│   └── codes_routes.js       # OAuth initiation route
-├── .env                      # Environment variables
-├── .gitignore               # Git ignore file
-├── package.json             # Dependencies
-└── server.js                # Main application file
+│   ├── contact_routes.js       # Contact management routes
+│   ├── callback_routes.js       # OAuth callback route
+│   └── codes_routes.js          # OAuth initiation route
+├── .env                         # Environment variables
+├── .gitignore                  # Git ignore file
+├── package.json                # Dependencies and scripts
+└── server.js                   # Main application entry point
 ```
 
 ## Installation
@@ -89,27 +92,31 @@ npm start
 
 ## API Endpoints
 
+### Contact Management
+
+1. **Create Contact**
+```
+POST /contacts/create
+```
+Creates a new contact. Requires valid GHL authentication. Currently returns a placeholder response.
+
 ### Authentication
 
 1. **Initiate OAuth Flow**
 ```
 GET /login
 ```
-Redirects user to GHL authorization page.
+Redirects user to GHL authorization page with proper scopes (contacts.readonly, contacts.write).
 
 2. **OAuth Callback**
 ```
 GET /oauth?code=authorization_code
 ```
-Handles OAuth callback, exchanges code for tokens, and stores them.
+Handles OAuth callback, exchanges code for tokens, and stores them in MySQL database.
 
 ### Protected API Routes
 
-1. **Get Contacts**
-```
-GET /api/contacts
-```
-Requires valid authentication. Automatically refreshes tokens if expired.
+The application currently has the contact creation endpoint as the main protected route. Additional protected routes can be added following the same pattern.
 
 ## Usage
 
@@ -123,26 +130,21 @@ Requires valid authentication. Automatically refreshes tokens if expired.
 
 ### Using Protected Routes
 
-Any route protected with `authMiddleware` will automatically:
-- Check for valid tokens
-- Refresh expired tokens
-- Attach access token to request as `req.accessToken`
+Any route protected with `ghlAuthMiddleware` will automatically:
+- Check for valid tokens from database
+- Refresh expired tokens using refresh token
+- Attach access token to request as `req.ghlAccessToken`
+- Use 1-minute buffer before token expiration
 
-Example of adding a new protected route:
+Example of the current contact creation endpoint:
 
 ```javascript
-const authMiddleware = require("../middleware/authMiddleware.js");
+const ghlAuthMiddleware = require("../middleware/ghlAuthMiddleware.js");
 
-router.get("/custom-endpoint", authMiddleware, async (req, res) => {
-    // Access token is available as req.accessToken
-    const response = await axios.get("https://services.leadconnectorhq.com/some-endpoint", {
-        headers: {
-            "Authorization": `Bearer ${req.accessToken}`,
-            "Version": process.env.VERSION_ID
-        }
-    });
-    
-    res.json(response.data);
+router.post("/create", ghlAuthMiddleware, async (req, res) => {
+    // Access token is available as req.ghlAccessToken
+    // TODO: Implement actual GHL API call
+    res.json({ message: "Create contact endpoint" });
 });
 ```
 
@@ -159,11 +161,12 @@ No manual intervention required - the system handles everything transparently.
 
 ## Dependencies
 
-- **express** - Web framework
-- **axios** - HTTP client for API calls
-- **mysql2** - MySQL database driver
-- **dotenv** - Environment variable management
-- **qs** - Query string parsing
+- **express** (v5.2.1) - Web framework
+- **axios** (v1.13.4) - HTTP client for API calls
+- **mysql2** (v3.16.3) - MySQL database driver
+- **dotenv** (v17.2.3) - Environment variable management
+- **qs** (v6.14.1) - Query string parsing
+- **nodemon** (v3.1.11) - Development auto-restart
 
 ## Development
 
@@ -171,6 +174,8 @@ Start with nodemon for auto-restart:
 ```bash
 npm run dev
 ```
+
+Note: The project currently uses `npm test` as a placeholder. Update package.json scripts for proper development commands.
 
 ## Contributing
 
